@@ -11,7 +11,7 @@ import nose.case
 from selenium.webdriver import Firefox as FirefoxWebDriver
 from selenium.webdriver import Chrome as ChromeDriver
 from selenium.webdriver import Remote as RemoteDriver
-from selenium.webdriver.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException
 
 from nosedjango.plugins.base_plugin import Plugin
 
@@ -135,7 +135,7 @@ class SeleniumPlugin(Plugin):
         # need to know the main window handle for cleaning up extra windows at
         # the end of each test
         if driver:
-            self._current_windows_handle = driver.get_current_window_handle()
+            self._current_windows_handle = driver.current_window_handle
 
     def afterTest(self, test):
         if not hasattr(self, 'times'):
@@ -148,7 +148,7 @@ class SeleniumPlugin(Plugin):
             return
         if self._current_windows_handle:
             # close all extra windows except for the main window
-            for window in driver.get_window_handles():
+            for window in driver.window_handles:
                 if window != self._current_windows_handle:
                     driver.switch_to_window(window)
                     driver.close()
