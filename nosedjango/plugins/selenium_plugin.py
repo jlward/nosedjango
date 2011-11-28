@@ -82,7 +82,10 @@ class SeleniumPlugin(Plugin):
             while current < timeout:
                 try:
                     self._driver = RemoteDriver(
-                        'http://%s:%s/wd/hub' % (self._remote_server_address, self._selenium_port),
+                        'http://%s:%s/wd/hub' % (
+                            self._remote_server_address,
+                            self._selenium_port,
+                        ),
                         self._driver_type,
                         'WINDOWS',
                     )
