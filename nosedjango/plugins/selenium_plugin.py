@@ -25,21 +25,46 @@ class SeleniumPlugin(Plugin):
                           help='Directory for failure screen shots.'
                           )
         parser.add_option('--headless',
-                          help="Run the Selenium tests in a headless mode, with virtual frames starting with the given index (eg. 1)",
+                          help=(
+                            "Run the Selenium tests in a headless mode, with "
+                            "virtual frames starting with the given index (eg. 1)"
+                          ),
                           default=None)
         parser.add_option('--driver-type',
                           help='The type of driver that needs to be created',
                           default='firefox')
         parser.add_option('--remote-server-address',
-                          help='Use a remote server to run the tests, must pass in the server address',
+                          help=(
+                            'Use a remote server to run the tests, '
+                            'must pass in the server address'
+                          ),
                           default='localhost')
         parser.add_option('--selenium-port',
                           help='The port for the selenium server',
                           default='4444')
         parser.add_option('--track-stats',
-                          help='After the suite is run print a table of test name/runtime/number of trips to the server.  defaults to ordering by trips to the server',
+                          help=(
+                            'After the suite is run print a table of test '
+                            'name/runtime/number of trips to the server. '
+                            'defaults to ordering by trips to the server'
+                          ),
                           default=None)
         Plugin.options(self, parser, env)
+
+    def __init__(self, *args, **kwargs):
+        super(SeleniumPlugin, self).__init__(*args, **kwargs)
+        self.ss_dir = None
+        self.x_display = None
+        self.start_time = None
+        self._driver = None
+        self._current_windows_handle = None
+        self.times = None
+        self._driver_type = None
+        self._selenium_port = None
+        self._track_stats = None
+        self.run_headless = None
+        self._remote_server_address = None
+        self.xvfb_process = None
 
     def configure(self, options, config):
         if options.selenium_ss_dir:
@@ -48,7 +73,9 @@ class SeleniumPlugin(Plugin):
             self.ss_dir = os.path.abspath('failure_screenshots')
         valid_browsers = ['firefox', 'internet_explorer', 'chrome']
         if options.driver_type not in valid_browsers:
-            raise RuntimeError('--driver-type must be one of: %s' % ' '.join(valid_browsers))
+            raise RuntimeError(
+                '--driver-type must be one of: %s' % ' '.join(valid_browsers),
+            )
         self._driver_type = options.driver_type.replace('_', ' ')
         self._remote_server_address = options.remote_server_address
         self._selenium_port = options.selenium_port
@@ -124,10 +151,16 @@ class SeleniumPlugin(Plugin):
         if self.run_headless:
             xvfb_display = self.x_display
             try:
-                self.xvfb_process = subprocess.Popen(['xvfb', ':%s' % xvfb_display, '-ac', '-screen', '0', '1024x768x24'], stderr=subprocess.PIPE)
+                self.xvfb_process = subprocess.Popen(
+                    ['xvfb', ':%s' % xvfb_display, '-ac', '-screen', '0', '1024x768x24'],
+                    stderr=subprocess.PIPE,
+                )
             except OSError:
                 # Newer distros use Xvfb
-                self.xvfb_process = subprocess.Popen(['Xvfb', ':%s' % xvfb_display, '-ac', '-screen', '0', '1024x768x24'], stderr=subprocess.PIPE)
+                self.xvfb_process = subprocess.Popen(
+                    ['Xvfb', ':%s' % xvfb_display, '-ac', '-screen', '0', '1024x768x24'],
+                    stderr=subprocess.PIPE,
+                )
             os.environ['DISPLAY'] = ':%s' % xvfb_display
 
     def beforeTest(self, test):
@@ -144,7 +177,13 @@ class SeleniumPlugin(Plugin):
         if not hasattr(self, 'times'):
             self.times = []
         if self.times and self._driver:
-            self.times.append((test.address()[2], int(time.time() - self.start_time), self._driver.roundtrip_counter))
+            self.times.append(
+                (
+                    test.address()[2],
+                    int(time.time() - self.start_time),
+                    self._driver.roundtrip_counter,
+                )
+            )
             self._driver.roundtrip_counter = 0
         driver = getattr(test.test, 'driver', False)
         if not driver:
